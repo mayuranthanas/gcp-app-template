@@ -1,0 +1,25 @@
+{
+    "name": "choose_project_name",
+    "chart": "cio-gke-deployment-chart.0.5.0",
+    "application": "your-application-name",
+    "namespace": "your-gke-namespace",
+    "clusterNp": "private-yul-np-001",
+    "clusterPr": "private-yul-pr-001",
+    "cmdbId": "12345",
+    "costCentre": "12345",
+    "organization": "cio",
+    "mailingList": "donotreply@telus.com",
+    "spinnakerServiceAccount": "your-github-group-sa",
+    "port" : "8080",
+    "gcpProjectIdNp" : "your_gcp_project_id_np",
+    "gcpProjectIdPr" : "your_gcp_project_id_pr",
+    "firestore": {
+	    "collectionName" : "sample-collection"
+    },
+    "gsa" : "google_service_account", 
+    "ksa" : "default",
+    "programmingLanguage" : "nodejs",
+    "githubRepo" : "this-github-repo",
+    "dnsRequest": "",
+    "sonarSourcesDir": "."
+}

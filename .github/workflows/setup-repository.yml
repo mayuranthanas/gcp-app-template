@@ -1,0 +1,426 @@
+name: Setup repository
+on:
+  push:
+    paths:
+      - cookiecutter*.json
+jobs:
+  setup:
+    name: Validate repo
+    runs-on: ubuntu-latest
+    env:
+      REPO_SETUP_TOKEN: ${{ secrets.REPO_SETUP_TOKEN }}
+    steps:
+      - name: Do not run scaffolding on template repository
+        shell: bash
+        # This workflow runs when the `cookiecutter.json` file is modified.
+        # This is the trick to re-init a repository, but we don't want to
+        # run this action if this file is modified in the origin template repository.
+        #
+        # Using the GitHub rest API allows us to identify if the current repository
+        # is a template repository or not.
+        run: |
+          curl --silent -X GET \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github.baptiste-preview+json" \
+            https://api.github.com/repos/$GITHUB_REPOSITORY \
+            | jq --exit-status '.is_template == false';
+      - uses: actions/checkout@v2
+        with:
+          # Comminting workflow files using the regular GITHUB_TOKEN will fail with 
+          # `Git Error: Refusing to allow a GitHub App to create or update workflow without workflows permission`.
+          # This is by design to prevent third-parties from adding malicious workflow files.
+          #
+          # Generate a new personal access token with the workflow `scope` does the trick.
+          token: ${{ env.REPO_SETUP_TOKEN || secrets.GITHUB_TOKEN }}
+  
+  check:
+    needs: setup
+    runs-on: ubuntu-latest  
+    name: Check updated file
+    steps:      
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0  # OR "2" -> To retrieve the preceding commit.
+      
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: pip install cookiecutter
+
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v8.9
+      
+      - name: List all modified files
+        run: |
+          export COOKIE_FILE="${{ steps.changed-files.outputs.all_modified_files }}";
+         
+      - id: file_check_step
+        run: echo "::set-output name=cookie_file::${{ steps.changed-files.outputs.all_modified_files }}"
+    outputs:
+      cookiefile_op: ${{ steps.file_check_step.outputs.cookie_file }}
+
+           
+  basic_job: 
+    needs: [check]
+    runs-on: ubuntu-latest 
+    name: Basic Setup...
+    env:
+      REPO_SETUP_TOKEN: ${{ secrets.REPO_SETUP_TOKEN }}
+    
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          # Generate a new personal access token with the workflow `scope` does the trick.
+          token: ${{ env.REPO_SETUP_TOKEN || secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+        
+      - name: get cookie file
+        shell: bash
+        run: |
+          export COOKIE_FILE="${{ needs.check.outputs.cookiefile_op }}"
+          echo $COOKIE_FILE
+          
+          if [[ $COOKIE_FILE != "cookiecutter.json" ]] ;
+          then        
+            echo "not basic, skipping ..."
+          else    
+            pip install cookiecutter
+
+            echo "run basic options ..."
+            export $(cat $COOKIE_FILE | jq -r "to_entries|map(\"\(.key)=\(.value|tostring)\")|.[]"); \
+            export DEV_FOLDER="basic"
+            echo "programmingLanguage: $programmingLanguage"
+            echo "dev_folder: $DEV_FOLDER"
+
+            # check dns request
+            sh ./.github/workflows/dns-check.sh
+
+            mkdir ./{{cookiecutter.name}}/src
+                        
+            if [ "$programmingLanguage" = "" ] ;
+            then
+              rm -rf ./{{cookiecutter.name}}/dev   
+              echo "ToDo: Add your source code to this folder!" >> ./{{cookiecutter.name}}/src/readme.txt
+            else
+              # run basic_job script
+              sh ./.github/workflows/basic_job.sh
+            fi
+
+            # clean up job
+            sh ./.github/workflows/job-cleanup.sh
+            
+          fi      
+         
+
+  postgresql_job:
+    needs: [check]
+    runs-on: ubuntu-latest 
+    name: PostgreSQL Setup...
+    env:
+      REPO_SETUP_TOKEN: ${{ secrets.REPO_SETUP_TOKEN }}
+    
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          # Generate a new personal access token with the workflow `scope` does the trick.
+          token: ${{ env.REPO_SETUP_TOKEN || secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+
+      - name: get cookie file
+        shell: bash
+        run: |
+          export COOKIE_FILE="${{ needs.check.outputs.cookiefile_op }}"
+          echo $COOKIE_FILE
+
+          if [[ $COOKIE_FILE != "cookiecutter-psql.json" ]] ;
+          then        
+            echo "not sql, skipping ..."
+          else    
+            pip install cookiecutter
+
+            echo "run sql options ..."
+            export $(cat $COOKIE_FILE | jq -r "to_entries|map(\"\(.key)=\(.value|tostring)\")|.[]");
+            export DEV_FOLDER="cloudpsql"
+
+            echo "programmingLanguage: $programmingLanguage"
+            if [ "$programmingLanguage" = "" ] ;
+            then
+              echo "no programming language selected"
+              exit 1
+            fi
+
+            # check dns request
+            sh ./.github/workflows/dns-check.sh
+
+            rm ./cookiecutter.json
+            mv ./$COOKIE_FILE ./cookiecutter.json
+
+            #create src directory at repo root
+            mkdir ./{{cookiecutter.name}}/src
+
+            # run postgresql_job script
+            sh ./.github/workflows/postgresql_job.sh
+
+            # clean up job
+            sh ./.github/workflows/job-cleanup.sh
+          fi
+          
+
+  memstore_job:
+    needs: [check]
+    runs-on: ubuntu-latest  
+    name: Memstore Redis Setup...
+    env:
+      REPO_SETUP_TOKEN: ${{ secrets.REPO_SETUP_TOKEN }}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          # Generate a new personal access token with the workflow `scope` does the trick.
+          token: ${{ env.REPO_SETUP_TOKEN || secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+
+      - name: get cookie file
+        shell: bash
+        run: |
+          export COOKIE_FILE="${{ needs.check.outputs.cookiefile_op }}"
+          echo $COOKIE_FILE
+
+          if [[ $COOKIE_FILE != "cookiecutter-memstore.json" ]] ;
+          then
+            echo "not memstore, skipping ..."
+          else
+            pip install cookiecutter
+
+            echo "run memstore options ..."
+            export $(cat $COOKIE_FILE | jq -r "to_entries|map(\"\(.key)=\(.value|tostring)\")|.[]");
+            export DEV_FOLDER="memorystore-redis"
+
+            echo "programmingLanguage: $programmingLanguage"
+            if [ "$programmingLanguage" = "" ] ;
+            then
+              echo "no programming language selected"
+              exit 1
+            fi
+
+            # check dns request
+            sh ./.github/workflows/dns-check.sh
+
+            rm ./cookiecutter.json
+            mv ./$COOKIE_FILE ./cookiecutter.json
+
+            #create src directory at repo root
+            mkdir ./{{cookiecutter.name}}/src
+
+            # run memstore_job script
+            sh ./.github/workflows/memstore_job.sh
+
+            # clean up job
+            sh ./.github/workflows/job-cleanup.sh
+          fi
+  
+
+  storage_job:
+    needs: [check]
+    runs-on: ubuntu-latest  
+    name: Cloud Storage Setup...
+    env:
+      REPO_SETUP_TOKEN: ${{ secrets.REPO_SETUP_TOKEN }}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          # Generate a new personal access token with the workflow `scope` does the trick.
+          token: ${{ env.REPO_SETUP_TOKEN || secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+
+      - name: get cookie file
+        shell: bash
+        run: |
+          export COOKIE_FILE="${{ needs.check.outputs.cookiefile_op }}"
+          echo $COOKIE_FILE
+
+          if [[ $COOKIE_FILE != "cookiecutter-gcstorage.json" ]] ;
+          then
+            echo "not gcstorage, skipping ..."
+          else
+            pip install cookiecutter
+
+            echo "run gcstorage options ..."
+            export $(cat $COOKIE_FILE | jq -r "to_entries|map(\"\(.key)=\(.value|tostring)\")|.[]");
+            export DEV_FOLDER="gcstorage"
+
+            echo "programmingLanguage: $programmingLanguage"
+            if [ "$programmingLanguage" = "" ] ;
+            then
+              echo "no programming language selected"
+              exit 1
+            fi
+
+            # check dns request
+            sh ./.github/workflows/dns-check.sh
+
+            rm ./cookiecutter.json
+            mv ./$COOKIE_FILE ./cookiecutter.json
+
+            #create src directory at repo root
+            mkdir ./{{cookiecutter.name}}/src
+
+            # run storage_job script
+            sh ./.github/workflows/storage_job.sh
+
+            # clean up job
+            sh ./.github/workflows/job-cleanup.sh
+          fi
+
+  pubsub_job:
+    needs: [check]
+    runs-on: ubuntu-latest  
+    name: Pubsub Setup...
+    env:
+      REPO_SETUP_TOKEN: ${{ secrets.REPO_SETUP_TOKEN }}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          # Generate a new personal access token with the workflow `scope` does the trick.
+          token: ${{ env.REPO_SETUP_TOKEN || secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+
+      - name: get cookie file
+        shell: bash
+        run: |
+          export COOKIE_FILE="${{ needs.check.outputs.cookiefile_op }}"
+          echo $COOKIE_FILE
+
+          if [[ $COOKIE_FILE != "cookiecutter-pubsub.json" ]] ;
+          then
+            echo "not pubsub, skipping ..."
+          else
+            pip install cookiecutter
+
+            echo "run pubsub options ..."
+            export $(cat $COOKIE_FILE | jq -r "to_entries|map(\"\(.key)=\(.value|tostring)\")|.[]");
+            export DEV_FOLDER="pubsub"
+
+            echo "programmingLanguage: $programmingLanguage"
+            if [ "$programmingLanguage" = "" ] ;
+            then
+              echo "no programming language selected"
+              exit 1
+            fi
+
+            # check dns request
+            sh ./.github/workflows/dns-check.sh
+
+            rm ./cookiecutter.json
+            mv ./$COOKIE_FILE ./cookiecutter.json
+
+            #create src directory at repo root
+            mkdir ./{{cookiecutter.name}}/src
+
+            # run pubsub_job script
+            sh ./.github/workflows/pubsub_job.sh
+
+            # clean up job
+            sh ./.github/workflows/job-cleanup.sh
+          fi
+
+  firestore_job:
+    needs: [check]
+    runs-on: ubuntu-latest  
+    name: Firestore Setup...
+    env:
+      REPO_SETUP_TOKEN: ${{ secrets.REPO_SETUP_TOKEN }}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          # Generate a new personal access token with the workflow `scope` does the trick.
+          token: ${{ env.REPO_SETUP_TOKEN || secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+
+      - name: get cookie file
+        shell: bash
+        run: |
+          export COOKIE_FILE="${{ needs.check.outputs.cookiefile_op }}"
+          echo $COOKIE_FILE
+
+          if [[ $COOKIE_FILE != "cookiecutter-firestore.json" ]] ;
+          then
+            echo "not firestore, skipping ..."
+          else
+            pip install cookiecutter
+
+            echo "run firestore options ..."
+            export $(cat $COOKIE_FILE | jq -r "to_entries|map(\"\(.key)=\(.value|tostring)\")|.[]");
+            export DEV_FOLDER="firestore"
+
+            echo "programmingLanguage: $programmingLanguage"
+            if [ "$programmingLanguage" = "" ] ;
+            then
+              echo "no programming language selected"
+              exit 1
+            fi
+
+            # check dns request
+            sh ./.github/workflows/dns-check.sh
+
+            rm ./cookiecutter.json
+            mv ./$COOKIE_FILE ./cookiecutter.json
+
+            #create src directory at repo root
+            mkdir ./{{cookiecutter.name}}/src
+
+            # run firestore_job script
+            sh ./.github/workflows/firestore_job.sh
+
+            # clean up job
+            sh ./.github/workflows/job-cleanup.sh
+          fi
+
+
+  cleanup_job:
+    needs: [memstore_job, postgresql_job, basic_job, storage_job, pubsub_job, firestore_job]
+    runs-on: ubuntu-latest  
+    name: Clean up
+    env:
+      REPO_SETUP_TOKEN: ${{ secrets.REPO_SETUP_TOKEN }}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          # Generate a new personal access token with the workflow `scope` does the trick.
+          token: ${{ env.REPO_SETUP_TOKEN || secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+      
+      - name: Remove secret REPO_SETUP_TOKEN
+        # After re-initializing the repository, we can remove the `REPO_SETUP_TOKEN` secret.
+        shell: bash
+        if: ${{ env.REPO_SETUP_TOKEN }}
+        run: |
+          curl \
+            -X DELETE --fail \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Authorization: token ${{ env.REPO_SETUP_TOKEN }}" \
+            https://api.github.com/repos/$GITHUB_REPOSITORY/actions/secrets/REPO_SETUP_TOKEN
+      

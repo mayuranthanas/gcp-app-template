@@ -1,0 +1,238 @@
+{
+    "expectedArtifacts": [
+      {
+        "defaultArtifact": {
+          "artifactAccount": "gcs-cio-gke-devops-e4993356",
+          "id": "d678d401-8e4d-468d-a2d6-f51ba3e00e84",
+          "name": "gs://cio-gke-devops-e4993356-chartmuseum/{{cookiecutter.chart}}.tgz",
+          "reference": "gs://cio-gke-devops-e4993356-chartmuseum/{{cookiecutter.chart}}.tgz",
+          "type": "gcs/object"
+        },
+        "displayName": "HELM Charts",
+        "id": "049a2b50-caf3-486d-b95d-eb24ebb4b280",
+        "matchArtifact": {
+          "artifactAccount": "gcs-cio-gke-devops-e4993356",
+          "id": "6f9fc984-e7bb-4496-9067-4d5b976f7284",
+          "name": "gs://cio-gke-devops-e4993356-chartmuseum/{{cookiecutter.chart}}.tgz",
+          "type": "gcs/object"
+        },
+        "useDefaultArtifact": true,
+        "usePriorArtifact": false
+      },
+      {
+        "defaultArtifact": {
+          "artifactAccount": "gcs-cio-gke-devops-e4993356",
+          "id": "23beb8e0-fe9a-4bce-ba8e-8e6846abe717",
+          "name": "gs://cio-gke-devops-e4993356-kubernetes-manifests/{{cookiecutter.namespace}}/{{cookiecutter.application}}-crq.yaml",
+          "reference": "gs://cio-gke-devops-e4993356-kubernetes-manifests/{{cookiecutter.namespace}}/{{cookiecutter.application-crq.yaml",
+          "type": "gcs/object"
+        },
+        "displayName": "CRQ Values",
+        "id": "f411d8b9-1ca8-4fa6-be7e-cc200d9d561e",
+        "matchArtifact": {
+          "artifactAccount": "gcs-cio-gke-devops-e4993356",
+          "id": "0c41a5fc-adbc-4c38-acb2-ec2a9588d058",
+          "name": "gs://cio-gke-devops-e4993356-kubernetes-manifests/{{cookiecutter.namespace}}/{{cookiecutter.application}}-crq.yaml",
+          "type": "gcs/object"
+        },
+        "useDefaultArtifact": true,
+        "usePriorArtifact": false
+      },
+      {
+        "defaultArtifact": {
+          "artifactAccount": "gcs-cio-gke-devops-e4993356",
+          "id": "6ac8d0d6-d594-4863-9c5c-90a48049ea17",
+          "name": "gs://cio-gke-devops-e4993356-chartmuseum/{{cookiecutter.chart}}.tgz",
+          "reference": "gs://cio-gke-devops-e4993356-chartmuseum/{{cookiecutter.chart}}.tgz",
+          "type": "gcs/object"
+        },
+        "displayName": "GKE ChartMuseum Helm Templates",
+        "id": "e886eba8-062f-44ae-8497-f0edc93c6d40",
+        "matchArtifact": {
+          "artifactAccount": "gcs-cio-gke-devops-e4993356",
+          "id": "a53f0b0e-4dbf-4fbc-a51f-cd2447771c37",
+          "name": "gs://cio-gke-devops-e4993356-chartmuseum/{{cookiecutter.chart}}.tgz",
+          "type": "gcs/object"
+        },
+        "useDefaultArtifact": true,
+        "usePriorArtifact": false
+      },
+      {
+        "defaultArtifact": {
+          "artifactAccount": "gcs-cio-gke-devops-e4993356",
+          "id": "d8496735-86c8-453c-911f-8cb2ee9b2ba6",
+          "name": "gs://cio-gke-devops-e4993356-kubernetes-manifests/{{cookiecutter.namespace}}/{{cookiecutter.application}}-st.yaml",
+          "reference": "gs://cio-gke-devops-e4993356-kubernetes-manifests/{{cookiecutter.namespace}}/{{cookiecutter.application}}-st.yaml",
+          "type": "gcs/object"
+        },
+        "displayName": "{{cookiecutter.application}} Helm Values NP",
+        "id": "6ea89332-a510-4db7-abbe-1684445d612f",
+        "matchArtifact": {
+          "artifactAccount": "gcs-cio-gke-devops-e4993356",
+          "id": "0b757823-fd48-46aa-918f-f109a9831cc2",
+          "name": "gs://cio-gke-devops-e4993356-kubernetes-manifests/{{cookiecutter.namespace}}/{{cookiecutter.application}}/{{cookiecutter.application}}-st.yaml",
+          "type": "gcs/object"
+        },
+        "useDefaultArtifact": true,
+        "usePriorArtifact": false
+      }
+    ],
+    "keepWaitingPipelines": false,
+    "lastModifiedBy": "",
+    "limitConcurrent": true,
+    "notifications": [
+      {
+        "address": "{{cookiecutter.mailingList}}",
+        "level": "pipeline",
+        "type": "email",
+        "when": [
+          "pipeline.complete",
+          "pipeline.starting",
+          "pipeline.failed"
+        ]
+      }
+    ],
+    "parameterConfig": [
+    ],
+    "spelEvaluator": "v4",
+    "stages": [
+      {
+        "expectedArtifacts": [
+          {
+            "defaultArtifact": {
+              "customKind": true,
+              "id": "aabc3d7c-3fc6-4796-96ff-fea260b0064f"
+            },
+            "displayName": "{{cookiecutter.application}} Manifest NP",
+            "id": "a730ccfa-a6fb-4777-ba1e-5835a9e1ee23",
+            "matchArtifact": {
+              "id": "1ca22a25-0078-47f5-9ee4-2a4b222ad811",
+              "name": "{{cookiecutter.application}}-np",
+              "type": "embedded/base64"
+            },
+            "useDefaultArtifact": true,
+            "usePriorArtifact": false
+          }
+        ],
+        "inputArtifacts": [
+          {
+            "account": "gcs-cio-gke-devops-e4993356",
+            "id": "e886eba8-062f-44ae-8497-f0edc93c6d40"
+          },
+          {
+            "account": "gcs-cio-gke-devops-e4993356",
+            "id": "6ea89332-a510-4db7-abbe-1684445d612f"
+          }
+        ],
+        "name": "Bake-NP",
+        "namespace": "{{cookiecutter.namespace }}",
+        "outputName": "{{cookiecutter.application}}",
+        "overrides": {},
+        "refId": "3",
+        "requisiteStageRefIds": [],
+        "templateRenderer": "HELM2",
+        "type": "bakeManifest"
+      },
+      {
+        "evaluateOverrideExpressions": true,
+        "expectedArtifacts": [
+          {
+            "defaultArtifact": {
+              "id": "5f620d25-50aa-4751-af07-e884496bc95b",
+              "type": "embedded/base64"
+            },
+            "displayName": "CRQ Job Manifest",
+            "id": "8f7e4305-b004-47c7-b001-151104d0b24a",
+            "matchArtifact": {
+              "id": "d5b42370-7e81-46d1-9bcb-3ffce361d0fb",
+              "name": "CRQ Job Manifest",
+              "type": "embedded/base64"
+            },
+            "useDefaultArtifact": true,
+            "usePriorArtifact": false
+          }
+        ],
+        "inputArtifacts": [
+          {
+            "account": "gcs-cio-gke-devops-e4993356",
+            "id": "049a2b50-caf3-486d-b95d-eb24ebb4b280"
+          },
+          {
+            "account": "gcs-cio-gke-devops-e4993356",
+            "id": "f411d8b9-1ca8-4fa6-be7e-cc200d9d561e"
+          }
+        ],
+        "name": "Bake CRQ Manifest",
+        "namespace": "crq-jobs",
+        "outputName": "{{cookiecutter.application}}",
+        "overrides": {
+          "extraEnvs.autoclose": "true",
+          "extraEnvs.pipeline": "${execution['name']}",
+          "extraEnvs.project": "${execution['application']}",
+          "extraEnvs.template": "PDC633D-GKEDeployment-NonProd",
+          "environment": "np"
+        },
+        "rawOverrides": false,
+        "refId": "1",
+        "requisiteStageRefIds": [],
+        "stageEnabled": {},
+        "templateRenderer": "HELM3",
+        "type": "bakeManifest"
+      },
+      {
+        "account": "crq-job-runner",
+        "alias": "runJob",
+        "application": "{{cookiecutter.namespace}}", 
+        "cloudProvider": "kubernetes",
+        "consumeArtifactSource": "propertyFile",
+        "credentials": "crq-job-runner",
+        "manifestArtifactAccount": "embedded-artifact",
+        "manifestArtifactId": "8f7e4305-b004-47c7-b001-151104d0b24a",
+        "name": "Run CRQ Manifest",
+        "refId": "2",
+        "requiredArtifactIds": [],
+        "requiredArtifacts": [],
+        "requisiteStageRefIds": [
+          "1"
+        ],
+        "source": "artifact",
+        "type": "runJobManifest"
+      },
+      {
+        "account": "{{cookiecutter.namespace}}-{{cookiecutter.clusterNp}}",
+        "cloudProvider": "kubernetes",
+        "manifestArtifactAccount": "embedded-artifact",
+        "manifestArtifactId": "a730ccfa-a6fb-4777-ba1e-5835a9e1ee23",
+        "moniker": {
+          "app": "{{cookiecutter.namespace}}"
+        },
+        "name": "Deploy-NP",
+        "refId": "4",
+        "requisiteStageRefIds": [
+          "3"
+        ],
+        "skipExpressionEvaluation": false,
+        "source": "artifact",
+        "trafficManagement": {
+          "enabled": false,
+          "options": {
+            "enableTraffic": false,
+            "services": []
+          }
+        },
+        "type": "deployManifest"
+      }
+    ],
+    "triggers": [
+      {
+        "enabled": true,
+        "payloadConstraints": {
+          "tag": "gcr.io/cio-gke-devops-e4993356/{{cookiecutter.namespace}}/{{cookiecutter.application}}:*"
+        },
+        "pubsubSystem": "google",
+        "runAsUser": "{{cookiecutter.spinnakerServiceAccount}}",
+        "subscriptionName": "gcr-triggers",
+        "type": "pubsub"
+      }
+    ]
+  }

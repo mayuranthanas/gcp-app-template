@@ -1,0 +1,5 @@
+extraEnvs:
+  - name: REDIS_IP
+    value: "{{ cookiecutter.memorystore.RedisIP }}"
+  - name: REDIS_PORT
+    value: "{{ cookiecutter.memorystore.RedisPort }}"
