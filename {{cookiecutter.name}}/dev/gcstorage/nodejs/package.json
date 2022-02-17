@@ -1,0 +1,15 @@
+{
+  "name": "starter-kit-storage",
+  "version": "1.0.0",
+  "description": "GCP Storage Sample in Nodejs",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "author": "",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "express": "^4.16.4",
+    "@google-cloud/storage": "^4.7.0"
+  }
+}

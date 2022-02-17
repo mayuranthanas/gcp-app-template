@@ -1,0 +1,11 @@
+cloudsqlproxy:
+  enabled: true
+  version: "1.16"
+  instance_connection: "{{ cookiecutter.cloudpsql.cloudsqlConnNameNp }}"
+
+rbac:
+  create: false 
+  serviceAccountAnnotations: {
+    iam.gke.io/gcp-service-account: "{{ cookiecutter.gsa }}@{{ cookiecutter.gcpProjectIdNp }}.iam.gserviceaccount.com }}"
+    }   
+  serviceAccountName: "{{ cookiecutter.ksa }}"
