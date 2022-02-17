@@ -1,0 +1,120 @@
+# Default values for helm-chart.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+name: pubsub-nodejs-demo
+application: pubsub-nodejs-demo
+namespace: frameworks-gcp-starter-kit
+
+#GKE Cluster Information
+chart: cio-gke-deployment-chart.0.5.0
+clusterNp: private-yul-np-001   
+clusterPr: private-yul-pr-001 
+
+# TELUS Labels/Annotations 
+cmdbId: 12345 
+costCentre: 12345
+organization: cio 
+mailingList: donotreply@telus.com
+
+# CD Information
+spinnakerServiceAccount: tf-infra-gcp-starter-kit-admin-sa
+
+# Application / Service port
+port : 8080 
+
+# GCP Project Information
+gcpProjectIdNp : cio-gcp-starter-kit-np-350470
+gcpProjectIdPr : cio-gcp-starter-kit-pr-181517
+gsa: gsa-cio-gcp-starter-kit-np
+ksa: default
+
+## Github repo
+githubRepo: pubsub-nodejs-demo
+
+# Hostname to be used by Ingress if you don't have one leave it blank
+# but don't comment it out
+hostnamePr: "your-application-name.cloudapp.telus.com"
+hostnameNp: "your-application-name-np.cloudapp.telus.com"
+
+##----------------------------------
+## DNS Request options are: 
+##    private
+##    public
+## Uncomment the following line to enable DNS Request
+##----------------------------------
+#dnsRequest: private
+
+## Set the SonarQube directory
+sonarSourcesDir: .
+
+##---------------
+## CRQ Settings
+##---------------
+crqRequester: your-xid-tid
+crqTemplate: PDC633D-GKEDeployment-NonProd
+crqSummary: GKE Deployment for application APPNAME
+crqImage: gcr.io/cio-gke-devops-e4993356/devops/crq-client:0.1.1
+
+
+##----------------------------------
+## Generate Sample code:
+## Options for programming language:
+##    java
+##    nodejs
+##    python
+## options for GCP service implementation
+## NOTE: Only one sample code will be created!
+##    basic   (hello world with no service implementation)
+##    cloudpsql
+##    pubsub
+##    memstoreredis
+##    gcstorage
+##    firestore
+##    cloudfunction
+## Uncomment folloing line to set the sample code option
+##----------------------------------
+sampleCode:
+   programmingLanguage : nodejs
+   gcpServiceSample : pubsub
+
+##----------------------------------
+## To generate Terraform and Helm sections for GCP Services
+## uncomment and configure the following sections:
+##----------------------------------
+
+## Info about pubsub
+## Uncomment this section for pubsub
+##----------------------------------
+pubsub:
+  topic: sample-topic-1
+  subscription: sample-subscription-1
+
+##----------------------------------
+## Info about cloudpsql
+## Uncomment this section for cloud PostgreSqL
+##----------------------------------
+#cloudpsql:
+#  cloudsqlConnNameNp: project:region:instanceid-np-dp
+#  cloudsqlConnNamePr: project:region:instanceid-pr-dp
+
+##----------------------------------
+## Info about memstoreRedis
+## Uncomment this section for cloud MemoryStore for Redis
+##----------------------------------
+#memstoreRedis:
+#  redisIP: 127.0.0.1
+#  redisPort: 6379
+
+##----------------------------------
+## Info about gcstorage
+## Uncomment this section for GCP Cloud Storage
+##----------------------------------
+#gcstorage:
+#  storageBucket: your_storage_bucket_name
+
+##----------------------------------
+## Info about firestore
+## Uncomment this section for GCP Firestore
+##----------------------------------
+#firestore:
+#  collectionName: sample-collection

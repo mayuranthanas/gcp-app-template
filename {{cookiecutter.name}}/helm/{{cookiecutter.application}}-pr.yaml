@@ -1,0 +1,65 @@
+# Default values for helm-chart.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+applicationName: {{ cookiecutter.application }}
+environment: pr
+replicaCount: 1
+namespace: {{ cookiecutter.namespace }}
+type: deployment
+
+#TELUS Labels/Annotations
+telus:
+  cmdbId: "{{ cookiecutter.cmdbId }}"
+  costCentre: "{{ cookiecutter.costCentre }}"
+  organization: "{{ cookiecutter.organization }}"
+  mailingList: "{{ cookiecutter.mailingList }}"
+
+image:
+  # HAS TO MATCH CLOUDBUILD
+  repository: gcr.io/cio-gke-devops-e4993356/{{ cookiecutter.namespace }}/{{ cookiecutter.application }}
+  tag: latest
+  pullPolicy: IfNotPresent
+
+livenessProbe:
+  httpGet:
+    path: /
+    port: {{ cookiecutter.port }}
+    # httpHeaders:
+    #   - name: Authorization
+    #     value: Basic dGVjaGh1YjpwYXNzdzByZA==
+
+readinessProbe:
+  httpGet:
+    path: /
+    port: {{ cookiecutter.port }}
+    # httpHeaders:
+    #   - name: Authorization
+    #     value: Basic dGVjaGh1YjpwYXNzdzByZA==
+
+service:
+  type: ClusterIP
+  port: {{ cookiecutter.port }}
+
+# *Note*: If you supply a command and args, the default Entrypoint and the default Cmd defined in the Docker image are ignored.
+#command: "['/bin/sh', '-c']"
+#*Note*: Sample command for running a Node js application
+#commandArgs:
+  #- npm run server;
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #  cpu: 100m
+  #  memory: 128Mi
+  # requests:
+  #  cpu: 100m
+  #  memory: 128Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
