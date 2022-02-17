@@ -1,0 +1,213 @@
+name: Setup repository
+on:
+  push:
+    paths:
+      - cookiecutter.yaml
+jobs:
+  setup:
+    name: Validate repo
+    runs-on: ubuntu-latest
+    env:
+      REPO_SETUP_TOKEN: ${{ secrets.REPO_SETUP_TOKEN }}
+    steps:
+      - name: Do not run scaffolding on template repository
+        shell: bash
+        # This workflow runs when the `cookiecutter.json` file is modified.
+        # This is the trick to re-init a repository, but we don't want to
+        # run this action if this file is modified in the origin template repository.
+        #
+        # Using the GitHub rest API allows us to identify if the current repository
+        # is a template repository or not.
+        run: |
+          curl --silent -X GET \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github.baptiste-preview+json" \
+            https://api.github.com/repos/$GITHUB_REPOSITORY \
+            | jq --exit-status '.is_template == false';
+      - uses: actions/checkout@v2
+        with:
+          # Comminting workflow files using the regular GITHUB_TOKEN will fail with 
+          # `Git Error: Refusing to allow a GitHub App to create or update workflow without workflows permission`.
+          # This is by design to prevent third-parties from adding malicious workflow files.
+          #
+          # Generate a new personal access token with the workflow `scope` does the trick.
+          token: ${{ env.REPO_SETUP_TOKEN || secrets.GITHUB_TOKEN }}
+  
+                     
+  basic_job: 
+    needs: [setup]
+    runs-on: ubuntu-latest 
+    name: Repo Setup...
+    env:
+      REPO_SETUP_TOKEN: ${{ secrets.REPO_SETUP_TOKEN }}
+    
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          # Generate a new personal access token with the workflow `scope` does the trick.
+          token: ${{ env.REPO_SETUP_TOKEN || secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+      
+      - name: convert yaml to json
+        uses: mikefarah/yq@master
+        with:
+          cmd: yq eval -o=j cookiecutter.yaml > cookie-from-yaml.json
+
+      - name: read cookie file
+        shell: bash
+        run: |
+          export COOKIE_FILE="cookie-from-yaml.json"
+          echo $COOKIE_FILE
+
+          pip install cookiecutter
+          
+          echo "flatten the json file to key=value"
+          rm -f t.json
+          jq -r '[leaf_paths as $path | {"key": $path | join("_"), "value": getpath($path)}] | from_entries' $COOKIE_FILE >> t.json
+          export $( cat t.json | jq -r "to_entries|map(\"\(.key)=\(.value|tostring)\")|.[]" t.json); \
+          rm t.json
+                    
+          export programmingLanguage="${sampleCode_programmingLanguage,,}"
+          echo "programmingLanguage: $programmingLanguage"
+          export DEV_FOLDER="${sampleCode_gcpServiceSample,,}"
+          echo "DEV_FOLDER: $DEV_FOLDER"
+          
+          echo "GITHUB_REPOSITORY: $GITHUB_REPOSITORY"          
+          export MY_REPONAME=`echo $GITHUB_REPOSITORY | tr / _`
+          echo "MY_REPONAME: $MY_REPONAME"
+
+          #echo "githubRepo: $githubRepo"
+          #echo "dnsRequest: $dnsRequest"
+          #echo "sonarSourcesDir: $sonarSourcesDir"
+          #echo "pubsub_topic: $pubsub_topic"
+          #echo "pubsub_subscription: $pubsub_subscription"
+          #echo "cloudpsql_cloudsqlConnNameNp: $cloudpsql_cloudsqlConnNameNp"
+          #echo "cloudpsql_cloudsqlConnNamePr: $cloudpsql_cloudsqlConnNamePr"
+          #echo "memstoreRedis_redisIP: $memstoreRedis_redisIP"
+          #echo "memstoreRedis_redisPort: $memstoreRedis_redisPort"
+          #echo "gcstorage_storageBucket: $gcstorage_storageBucket"
+          #echo "firestore_collectionName: $firestore_collectionName"
+          
+          cp $COOKIE_FILE ./cookiecutter.json
+          
+          mkdir ./{{cookiecutter.name}}/src
+          if [[ $programmingLanguage != "" ]] ;
+          then
+            if [[ $DEV_FOLDER != "" ]] ;
+            then
+              
+              #add the selected sample code
+              if [[ $DEV_FOLDER == "basic" ]] ;
+              then
+                sh ./.github/workflows/basic_job.sh
+              fi
+              if [[ $DEV_FOLDER == "cloudpsql" ]] ;
+              then
+                # make sure that the cloudpsql section is configured
+                if [[ $cloudpsql_cloudsqlConnNameNp == "" ]] || [[ $cloudpsql_cloudsqlConnNamePr == "" ]] ;
+                then
+                  echo "Validation Error: Missing cloudpsql configuration."
+                  exit 1
+                fi
+                sh ./.github/workflows/postgresql_job.sh
+              fi
+              if [[ $DEV_FOLDER == "firestore" ]] ;
+              then
+                if [[ $firestore_collectionName == "" ]] ;
+                then
+                  echo "Validation Error: Missing firestore configuration."
+                  exit 1
+                fi
+                sh ./.github/workflows/firestore_job.sh
+              fi
+              if [[ $DEV_FOLDER == "gcstorage" ]] ;
+              then
+                if [[ $gcstorage_storageBucket == "" ]] ;
+                then
+                  echo "Validation Error: Missing gcstorage configuration."
+                  exit 1
+                fi
+                sh ./.github/workflows/storage_job.sh
+              fi
+              if [[ $DEV_FOLDER == "memstoreredis" ]] ;
+              then
+                if [[ $memstoreRedis_redisIP == "" ]] || [[ $memstoreRedis_redisPort == "" ]] ;
+                then
+                  echo "Validation Error: Missing memstoreRedis configuration."
+                  exit 1
+                fi
+                sh ./.github/workflows/memstore_job.sh
+              fi
+              if [[ $DEV_FOLDER == "pubsub" ]] ;
+              then
+                if [[ $pubsub_topic == "" ]] ||[[ $pubsub_subscription == "" ]] ;
+                then
+                  echo "Validation Error: Missing pubsub configuration."
+                  exit 1
+                fi
+                sh ./.github/workflows/pubsub_job.sh
+              fi
+              if [[ $DEV_FOLDER == "cloudfunction" ]] ;
+              then
+                sh ./.github/workflows/cloudfunction_job.sh
+              fi
+            fi
+
+          else
+            export DEV_FOLDER=""
+            # no programming language selected
+            echo "ToDo: Add your source code to this folder!" >> ./{{cookiecutter.name}}/src/README.md
+          fi
+          
+          #check optional services
+          sh ./.github/workflows/optional_services_job.sh
+          
+          # check dns request
+          sh ./.github/workflows/dns-check.sh
+
+          # clean up job
+          sh ./.github/workflows/job-cleanup.sh          
+
+  cleanup_job:
+    needs: [basic_job]
+    runs-on: ubuntu-latest  
+    name: Clean up
+    env:
+      REPO_SETUP_TOKEN: ${{ secrets.REPO_SETUP_TOKEN }}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          # Generate a new personal access token with the workflow `scope` does the trick.
+          token: ${{ env.REPO_SETUP_TOKEN || secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+      
+      - name: Remove secret REPO_SETUP_TOKEN
+        # After re-initializing the repository, we can remove the `REPO_SETUP_TOKEN` secret.
+        shell: bash
+        if: ${{ env.REPO_SETUP_TOKEN }}
+        run: |
+          curl \
+            -X DELETE --fail \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Authorization: token ${{ env.REPO_SETUP_TOKEN }}" \
+            https://api.github.com/repos/$GITHUB_REPOSITORY/actions/secrets/REPO_SETUP_TOKEN
+  pipeline_update:
+    needs: [cleanup_job]
+    name: Updating pipelines
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          path: main
+          ref: main
+      - name: Private Action
+        uses: ./main/doe-artifacts/update
+        with: 
+          github-token: ""
+          starter-kit: true
