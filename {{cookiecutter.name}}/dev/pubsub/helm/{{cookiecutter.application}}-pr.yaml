@@ -1,0 +1,9 @@
+extraEnvs:
+  - name: TOPIC_NAME
+    value: "{{ cookiecutter.pubsub.topic }}"
+  - name: SUBSCRIPTION_NAME
+    value: "{{ cookiecutter.pubsub.subscription }}"
+  - name: PROJECT_ID_NP
+    value: "{{ cookiecutter.gcpProjectIdNp }}"
+  - name: PROJECT_ID_PR
+    value: "{{ cookiecutter.gcpProjectIdPr }}"
