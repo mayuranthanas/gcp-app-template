@@ -1,0 +1,74 @@
+steps:
+# - name: 'gcr.io/cloud-builders/docker'
+#   id: 'Build Unit Test Image'
+#   dir: unit_test_image
+#   args: [ 'build', '.' , '-t', 'gcr.io/${_DEVOPS_PROJECT}/${_NAMESPACE}/${_TEST_APP}:latest' ]
+
+# - name: 'gcr.io/cloud-builders/docker'
+#   id: 'Run Unit Test'
+#   args: ['run', 'gcr.io/${_DEVOPS_PROJECT}/${_NAMESPACE}/${_TEST_APP}:latest' ]
+
+- name: 'gcr.io/cloud-builders/docker'
+  id: 'Build Application Image'
+  dir: '.'
+  args:
+  - 'build'
+  - '.'
+  - '-t'
+  - 'gcr.io/${_DEVOPS_PROJECT}/${_NAMESPACE}/${_APP}:latest'
+  - '-t'
+  - 'gcr.io/${_DEVOPS_PROJECT}/${_NAMESPACE}/${_APP}:$SHORT_SHA'
+
+- name: "gcr.io/cloud-builders/gsutil"
+  id: 'Copy Helm Files to Cloud Storage'
+  args: [ 'cp', '-Z', 'helm/{{cookiecutter.application}}*yaml', 'gs://${_DEVOPS_PROJECT}-kubernetes-manifests/${_NAMESPACE}/' ]
+
+# - id: 'Inspect Image'
+#   name: 'gcr.io/cloud-builders/docker'
+#   entrypoint: /bin/bash
+#   args:
+#   - '-c'
+#   - |
+#     docker image inspect gcr.io/${_DEVOPS_PROJECT}/${_NAMESPACE}/${_APP}:latest --format \
+#     '\{\{index .RepoTags 0\}\}@\{\{.Id\}\}' > /workspace/image-digest.txt &&
+#     cat image-digest.txt
+    
+# - id: 'Scan Image'
+#   name: 'gcr.io/cloud-builders/gcloud'
+#   entrypoint: /bin/bash
+#   args:
+#   - '-c'
+#   - |
+#     gcloud artifacts docker images scan gcr.io/${_DEVOPS_PROJECT}/${_NAMESPACE}/${_APP}:latest \
+#     --format='value(response.scan)' > /workspace/scan_id.txt
+
+# - id: Severity check
+#   name: gcr.io/cloud-builders/gcloud
+#   entrypoint: /bin/bash
+#   args:
+#   - -c
+#   - |-
+#     gcloud artifacts docker images list-vulnerabilities $(cat /workspace/scan_id.txt) \
+#     --format='value(vulnerability.effectiveSeverity)' > /workspace/severity_list.txt
+#     if grep -q "CRITICAL" /workspace/severity_list.txt; then
+#       echo "View vulnerabilities at https://console.cloud.google.com/gcr/images/${_DEVOPS_PROJECT}/GLOBAL/${_NAMESPACE}/${_APP}"
+#     fi
+
+images:
+# - 'gcr.io/${_DEVOPS_PROJECT}/${_NAMESPACE}/${_TEST_APP}:latest'
+- 'gcr.io/${_DEVOPS_PROJECT}/${_NAMESPACE}/${_APP}:latest'
+- 'gcr.io/${_DEVOPS_PROJECT}/${_NAMESPACE}/${_APP}:$SHORT_SHA'
+
+#availableSecrets:
+#  secretManager:
+#  - versionName: projects/${_SONAR_PROJECT}/secrets/sonar_token/versions/latest
+#    env: 'SQ_TOKEN'
+
+substitutions:
+  _APP: '{{ cookiecutter.application }}'
+  _NAMESPACE: '{{ cookiecutter.namespace }}'
+  _DEVOPS_PROJECT: 'cio-gke-devops-e4993356'
+  _ORG: CIO
+  _TEST_APP: test-${_APP}
+  _SONAR_PROJECT: 'cio-sonarqube-np-dd42e7'
+  _SONAR_SOURCES_DIR: '{{ cookiecutter.sonarSourcesDir }}'

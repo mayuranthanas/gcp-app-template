@@ -1,0 +1,162 @@
+{
+    "expectedArtifacts": [
+      {
+        "defaultArtifact": {
+          "artifactAccount": "gcs-cio-gke-devops-e4993356",
+          "id": "d678d401-8e4d-468d-a2d6-f51ba3e00e84",
+          "name": "gs://cio-gke-devops-e4993356-chartmuseum/{{cookiecutter.chart}}.tgz",
+          "reference": "gs://cio-gke-devops-e4993356-chartmuseum/{{cookiecutter.chart}}.tgz",
+          "type": "gcs/object"
+        },
+        "displayName": "HELM Charts",
+        "id": "049a2b50-caf3-486d-b95d-eb24ebb4b280",
+        "matchArtifact": {
+          "artifactAccount": "gcs-cio-gke-devops-e4993356",
+          "id": "6f9fc984-e7bb-4496-9067-4d5b976f7284",
+          "name": "gs://cio-gke-devops-e4993356-chartmuseum/{{cookiecutter.chart}}.tgz",
+          "type": "gcs/object"
+        },
+        "useDefaultArtifact": true,
+        "usePriorArtifact": true
+      },
+      {
+        "defaultArtifact": {
+          "artifactAccount": "gcs-cio-gke-devops-e4993356",
+          "id": "23beb8e0-fe9a-4bce-ba8e-8e6846abe717",
+          "name": "gs://cio-gke-devops-e4993356-kubernetes-manifests/{{cookiecutter.namespace}}/{{cookiecutter.application}}-crq.yaml",
+          "reference": "gs://cio-gke-devops-e4993356-kubernetes-manifests/{{cookiecutter.namespace}}/{{cookiecutter.application}}-crq.yaml",
+          "type": "gcs/object"
+        },
+        "displayName": "CRQ Values",
+        "id": "f411d8b9-1ca8-4fa6-be7e-cc200d9d561e",
+        "matchArtifact": {
+          "artifactAccount": "gcs-cio-gke-devops-e4993356",
+          "id": "0c41a5fc-adbc-4c38-acb2-ec2a9588d058",
+          "name": "gs://cio-gke-devops-e4993356-kubernetes-manifests/{{cookiecutter.namespace}}/{{cookiecutter.application}}-crq.yaml",
+          "type": "gcs/object"
+        },
+        "useDefaultArtifact": true,
+        "usePriorArtifact": true
+      }
+    ],
+    "keepWaitingPipelines": false,
+    "lastModifiedBy": "{{cookiecutter.mailingList}}",
+    "limitConcurrent": true,
+    "parameterConfig": [
+      {
+        "default": "",
+        "description": "Expected release date in format YYYY-mm-dd",
+        "hasOptions": false,
+        "label": "Release date",
+        "name": "date",
+        "options": [
+            {
+            "value": ""
+            }
+        ],
+        "pinned": true,
+        "required": true
+      }
+    ],
+    "spelEvaluator": "v4",
+    "stages": [
+      {
+        "evaluateOverrideExpressions": true,
+        "expectedArtifacts": [
+          {
+            "defaultArtifact": {
+              "id": "5f620d25-50aa-4751-af07-e884496bc95b",
+              "type": "embedded/base64"
+            },
+            "displayName": "CRQ Job Manifest",
+            "id": "8f7e4305-b004-47c7-b001-151104d0b24a",
+            "matchArtifact": {
+              "id": "d5b42370-7e81-46d1-9bcb-3ffce361d0fb",
+              "name": "CRQ Job Manifest",
+              "type": "embedded/base64"
+            },
+            "useDefaultArtifact": false,
+            "usePriorArtifact": false
+          }
+        ],
+        "inputArtifacts": [
+          {
+            "account": "gcs-cio-gke-devops-e4993356",
+            "id": "049a2b50-caf3-486d-b95d-eb24ebb4b280"
+          },
+          {
+            "account": "gcs-cio-gke-devops-e4993356",
+            "id": "f411d8b9-1ca8-4fa6-be7e-cc200d9d561e"
+          }
+        ],
+        "name": "Bake CRQ Manifest",
+        "namespace": "crq-jobs",
+        "outputName": "{{cookiecutter.application}}",
+        "overrides": {
+          "extraEnvs.date": "${parameters['date']}",
+          "extraEnvs.pipeline": "${execution['name']}",
+          "extraEnvs.project": "${execution['application']}",
+          "extraEnvs.template": "PDC633D-GKEDeployment",
+          "extraEnvs.autoclose": "false"
+        },
+        "rawOverrides": false,
+        "notifications": [
+          {
+            "address": "",
+            "level": "stage",
+            "publisherName": "spin-stage",
+            "type": "pubsub",
+            "when": [
+              "stage.complete",
+              "stage.failed",
+              "stage.starting"
+            ]
+          }
+        ],
+        "sendNotifications": true,
+        "refId": "1",
+        "requisiteStageRefIds": [],
+        "stageEnabled": {
+          "expression": "${parameters[\"date\"].matches(\"\\d{4,4}-\\d{2,2}-\\d{2,2}\")}",
+          "type": "expression"
+        },
+        "templateRenderer": "HELM3",
+        "type": "bakeManifest"
+      },
+      {
+        "account": "crq-job-runner",
+        "alias": "runJob",
+        "application": "{{cookiecutter.namespace}}",
+        "cloudProvider": "kubernetes",
+        "consumeArtifactSource": "propertyFile",
+        "credentials": "crq-job-runner",
+        "manifestArtifactAccount": "embedded-artifact",
+        "manifestArtifactId": "8f7e4305-b004-47c7-b001-151104d0b24a",
+        "name": "Run CRQ Job",
+        "notifications": [
+          {
+            "address": "",
+            "level": "stage",
+            "publisherName": "spin-stage",
+            "type": "pubsub",
+            "when": [
+              "stage.complete",
+              "stage.failed",
+              "stage.starting"
+            ]
+          }
+        ],
+        "sendNotifications": true,
+        "refId": "2",
+        "requiredArtifactIds": [],
+        "requiredArtifacts": [],
+        "requisiteStageRefIds": [
+          "1"
+        ],
+        "source": "artifact",
+        "type": "runJobManifest"
+      }
+    ],
+    "triggers": [],
+    "updateTs": "1626364665562"
+  }

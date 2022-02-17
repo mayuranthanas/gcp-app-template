@@ -1,0 +1,35 @@
+{
+    "keepWaitingPipelines": false,
+    "lastModifiedBy": "",
+    "limitConcurrent": true,
+    "spelEvaluator": "v4",
+    "stages": [
+      {
+        "account": "{{cookiecutter.namespace}}-{{cookiecutter.clusterNp}}",
+        "cloudProvider": "kubernetes",
+        "location": "{{cookiecutter.namespace}}",
+        "manifestName": "deployment {{cookiecutter.application}}-st",
+        "mode": "static",
+        "name": "Rollback Deployment",
+        "numRevisionsBack": 1,
+        "notifications": [
+          {
+            "address": "",
+            "level": "stage",
+            "publisherName": "spin-stage",
+            "type": "pubsub",
+            "when": [
+              "stage.complete",
+              "stage.failed",
+              "stage.starting"
+            ]
+          }
+        ],
+        "sendNotifications": true,
+        "refId": "1",
+        "requisiteStageRefIds": [],
+        "type": "undoRolloutManifest"
+      }
+    ],
+    "triggers": []
+  }
