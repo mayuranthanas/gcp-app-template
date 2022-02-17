@@ -1,0 +1,21 @@
+name: GCP pipelines update
+
+on: workflow_dispatch
+
+jobs:
+  pipeline-update:
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          path: main
+      - uses: actions/checkout@v2                            
+        with:
+          repository: telus/gcp-pipeline-templates
+          token: ${{ secrets.READ_PAT }}
+          path: actions
+          ref: v0.1.0
+      - name: Private Action
+        uses: ./actions/actions/pipelines
+        with: 
+          github-token: ${{ secrets.READ_PAT }}
