@@ -1,0 +1,44 @@
+name: 'Update pipelines'
+description: 'Get the spinnaker pipelines from your values file'
+inputs:
+  pipeline-version:
+    description: 'The pipeline version'
+    required: true
+    default: ""
+  github-token:
+    description: 'PAT from github org'
+    required: true
+  output-values-path:
+    description: "Folder where you want to store the generated values files"
+    required: true
+    default: "helm"
+  output-spinnaker-path:
+    description: "Folder where you want to store the generated pipeline files"
+    required: true
+    default: "spinnaker"
+  source-repo:
+    description: "Source code repository, only the name"
+    required: true
+    default: "gcp-app-template"
+  starter-kit:
+    description: "Boolean flag to check if action is from starter kit or not"
+    required: true
+    default: ""
+runs:
+  using: "composite"
+  steps:
+    - run: echo Starting pipeline template
+      shell: bash
+    - run: ${{ github.action_path }}/setup.sh
+      shell: bash
+      env:
+        PIPELINE_TAG: ${{ inputs.pipeline-version }}
+        GITHUB_PAT: ${{ inputs.github-token }}
+        GITHUB_REPO: ${{ github.repository }}
+        OUTPUT_VALUES_PATH: ${{inputs.output-values-path}}
+        OUTPUT_SPINNAKER_PATH: ${{inputs.output-spinnaker-path}}
+        SOURCE_REPO: ${{inputs.source-repo}}
+        STARTER_KIT: ${{inputs.starter-kit}}
+        ACTION_DIR: ${{ github.action_path }}
+    - run: echo Pipeline template finished
+      shell: bash

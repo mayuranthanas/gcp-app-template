@@ -1,0 +1,1 @@
+Follow the instructions [here](https://developers.telus.com/topics/creating-a-continuous-delivery-pipeline-in-spinnaker) to create a new Pipeline for this project

@@ -1,0 +1,63 @@
+steps:
+
+# To setup Sonarqube scanning your cloudbuild serviceaccount needs 
+# permissions to access the SQ_TOKEN in project cio-sonarqube-np-dd42e7
+# Complete the pre-requisite steps at https://developers.telus.com/guides/integrating-sonarqube-into-gcp-pipelines
+#
+#- name: 'gcr.io/${_DEVOPS_PROJECT}/sonar-scanner'
+#  id: 'Sonar Scanner'
+#  entrypoint: 'bash'
+#  args:
+#    - "-c"
+#    - |
+#      echo "35.227.202.62 sonarqube.cloudapps.telus.com" > /etc/hosts \
+#      && sonar-scanner -Dsonar.login=$$SQ_TOKEN -Dsonar.host.url=https://sonarqube.cloudapps.telus.com \
+#      -Dsonar.projectKey=${_APP} -Dsonar.organization=${_ORG} \
+#      -Dsonar.sources=${_SONAR_SOURCES_DIR} \
+#      -Dsonar.qualitygate.wait=true
+#  secretEnv: ['SQ_TOKEN']
+
+# Uncomemnt when unit tests are available
+#- name: 'gcr.io/cloud-builders/docker'
+#  id: 'Build Unit Test Image'
+#  dir: unit_test_image
+#  args: [ 'build', '.' , '-t', 'gcr.io/${_DEVOPS_PROJECT}/${_NAMESPACE}/${_TEST_APP}:latest' ]
+
+#- name: 'gcr.io/cloud-builders/docker'
+#  id: 'Run Unit Test'
+#  args: ['run', 'gcr.io/${_DEVOPS_PROJECT}/${_NAMESPACE}/${_TEST_APP}:latest' ]
+
+- name: 'gcr.io/cloud-builders/docker'
+  id: 'Build Application Image'
+  dir:
+  args:
+  - 'build'
+  - '.'
+  - '-t'
+  - 'gcr.io/${_DEVOPS_PROJECT}/${_NAMESPACE}/${_APP}:latest'
+  - '-t'
+  - 'gcr.io/${_DEVOPS_PROJECT}/${_NAMESPACE}/${_APP}:$SHORT_SHA'
+
+- name: "gcr.io/cloud-builders/gsutil"
+  id: 'Copy Helm Files to Cloud Storage'
+  args: [ 'cp', '-Z', 'helm/*yaml', 'gs://${_DEVOPS_PROJECT}-kubernetes-manifests/${_NAMESPACE}/' ]
+  
+images:
+#- 'gcr.io/${_DEVOPS_PROJECT}/${_NAMESPACE}/${_TEST_APP}:latest'
+- 'gcr.io/${_DEVOPS_PROJECT}/${_NAMESPACE}/${_APP}:latest'
+- 'gcr.io/${_DEVOPS_PROJECT}/${_NAMESPACE}/${_APP}:$SHORT_SHA'
+
+# Un-comment after completing Sonarqube pre-requisites
+#availableSecrets:
+#  secretManager:
+#    - versionName: projects/${_SONAR_PROJECT}/secrets/sonar_token/versions/latest
+#      env: 'SQ_TOKEN'
+
+substitutions:
+  _APP: {{ cookiecutter.application }}
+  _NAMESPACE: {{ cookiecutter.namespace }}
+  _DEVOPS_PROJECT: 'cio-gke-devops-e4993356'
+  _ORG: {{ cookiecutter.organization }}
+  _TEST_APP: test-{{ cookiecutter.application }}
+  _SONAR_PROJECT: 'cio-sonarqube-np-dd42e7'
+  _SONAR_SOURCES_DIR: {{ cookiecutter.sonarSourcesDir }}
