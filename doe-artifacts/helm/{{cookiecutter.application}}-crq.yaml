@@ -1,0 +1,57 @@
+# This file contians the values for the crq
+# please make sure you have the values set in the cookiecutter.json file
+#
+# extra values required are:    
+#   - crqTemplate: PDC633D-GKEDeployment-NonProd
+#   - crqRequester: 
+#   - crqSummary: GKE Deployment for application APPNAME
+#   - crqImage: gcr.io/cio-gke-devops-e4993356/devops/crq-client:0.1.1
+# 
+# At the moment the values you must use are the ones specified
+# only value that changes is requester
+#
+applicationName: "{{ cookiecutter.application}}"
+environment: pr
+type: job
+image: {{ cookiecutter.crqImage }}
+jobDescription: crq-job
+namespace: crq-jobs
+
+#TELUS Labels/Annotations
+telus:
+  cmdbId: "{{cookiecutter.cmdbId}}"
+  costCentre: "{{cookiecutter.costCentre}}"
+  organization: "{{cookiecutter.organization}}"
+  mailingList: "{{cookiecutter.mailingList}}"
+
+#env variables
+extraEnvs:
+  project: "{{cookiecutter.name}}"
+  pipeline: "{{cookiecutter.application}} pipeline"
+  placeholders: '{"[UAT-TESTER]": "{{ cookiecutter.mailingList }}" }{%- if 'crqPlaceholders' in cookiecutter %}{%- for key, value in crqPlaceholders.items() %},"{{ key }}" : "{{value }}"{%- endfor %} }{%- endif %}'
+  template: {{ cookiecutter.crqTemplate }}
+  requester: {{ cookiecutter.crqRequester }}
+  cmdbId: {{ cookiecutter.cmdbId }}
+  autoclose: true
+  summary: {{ cookiecutter.crqSummary | replace("APPNAME", cookiecutter.application) }}
+  {%- if 'crqEnar' in cookiecutter %}
+  enar: {{ cookiecutter.crqEnar }}
+  {% endif %}
+
+#secrets 
+secrets:
+  - name: CLIENT_ID
+    valueFrom:
+      secretKeyRef:
+        key: CLIENT_ID
+        name: application-credentials
+  - name: CLIENT_SECRET
+    valueFrom:
+      secretKeyRef:
+        key: CLIENT_SECRET
+        name: application-credentials
+  - name: X_API_KEY
+    valueFrom:
+      secretKeyRef:
+        key: X_API_KEY
+        name: application-credentials

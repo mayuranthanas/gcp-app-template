@@ -1,0 +1,8 @@
+extraEnvs:
+  - name: COLLECTION_NAME
+    value: "{{ cookiecutter.firestore.collectionName }}"
+  - name: PROJECT_ID_NP
+    value: "{{ cookiecutter.gcpProjectIdNp }}"
+  - name: PROJECT_ID_PR
+    value: "{{ cookiecutter.gcpProjectIdPr }}"
+
