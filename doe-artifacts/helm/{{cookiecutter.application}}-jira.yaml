@@ -1,0 +1,47 @@
+# This file contians the values for the crq
+# please make sure you have the values set in the cookiecutter.json file
+#
+# extra values required are:    
+#   - jiraURL: "https://jira.tsl.telus.com/rest/api/latest/"
+#   - jiraImage: gcr.io/cio-gke-devops-e4993356/devops/jira-client:latest
+# 
+# note that cookiecutter.chart must be set to:
+#     cio-gke-deployment-chart.0.8.0 for this to work
+#
+applicationName: "{{cookiecutter.application}}"
+environment: pr
+type: job
+image: {{ cookiecutter.jiraImage }}
+jobDescription: crq-job
+namespace: crq-jobs
+
+#TELUS Labels/Annotations
+telus:
+  cmdbId: "{{cookiecutter.cmdbId}}"
+  costCentre: "{{cookiecutter.costCentre}}"
+  organization: "{{cookiecutter.organization}}"
+  mailingList: "{{cookiecutter.mailingList}}"
+
+#env variables
+extraEnvs:
+  jiraURL: "{{cookiecutter.jiraURL}}"
+  appImage: gcr.io/cio-gke-devops-e4993356/{{cookiecutter.namespace}}/{{cookiecutter.application}}
+
+#secrets 
+secrets:
+  - name: JIRA_UID
+    valueFrom:
+      secretKeyRef:
+        key: username
+        name: jira-integration
+  - name: JIRA_PWD
+    valueFrom:
+      secretKeyRef:
+        key: password
+        name: jira-integration
+  
+#secretMounts
+secretMounts:
+  - name: gcr-sa
+    path: '/gcr'
+    secretName: gcr-json-key
